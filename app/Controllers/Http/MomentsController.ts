@@ -47,4 +47,59 @@ export default class MomentsController {
     }
   }
 
+  public async show({ params }: HttpContextContract) {
+
+    const moment = await Moment.findOrFail(params.id)
+
+    return {
+      data: moment,
+    }
+
+  }
+
+  public async destroy({ params }: HttpContextContract) {
+
+    const moment = await Moment.findOrFail(params.id)
+
+
+    await moment.delete()
+
+    return {
+      message: "Momento excluído com sucesso!",
+      data: moment,
+    }
+  }
+
+  public async update({ params, request }: HttpContextContract) {
+    const body = request.body()
+
+    const moment = await Moment.findOrFail(params.id)
+
+    moment.title = body.title
+    moment.description = body.description
+
+    if (moment.image != body.image || !moment.image) {
+      const image = request.file('image', this.validationOptions)
+
+      if (image) {
+        const imageName = `${uuidv4()}.${image.extname}`
+
+        await image.move(Application.tmpPath('uploads'), {
+          name: imageName
+        })
+
+        moment.image = imageName
+      }
+    }
+
+    await moment.save()
+
+    return {
+      message: "Momento atualizado com sucesso!",
+      data: moment,
+    }
+  }
+
 }
+
+
